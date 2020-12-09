@@ -1,3 +1,7 @@
+### ⚡ Autenticação com Google no Expo (React Native)
+
+**Siga as instruções:**
+
 * Inicialmente, você deve habilitar o gerenciador de credenciais de acordo com o seu aparelho (estou usando android)   
     * ```expo credentials:manager -p android```
     * Escolha as opções: YES -> update upload keystore -> generate new keystore -> quit credential manager.
@@ -32,7 +36,7 @@
 
 * Copie o código do meu ```App.tsx```;
 
-* Informe a credenciar que foi gerada no Google Developers Console na linha 13, no campo ```androidClientId```;
+* Informe a credenciar que foi gerada no Google Developers Console na linha 13, no campo ```androidClientId``` (se for IOS, troque por ```iosClientId```);
 
 * Feito isso, rode o comando ```expo start``` para iniciar o aplicativo, faça o login e veja o resultado no console do Expo.
 
