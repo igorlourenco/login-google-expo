@@ -1,10 +1,14 @@
 import React, {useEffect, useState} from 'react';
-import {Alert, Button, StyleSheet, Text, View} from 'react-native';
+import {Button, StyleSheet, Text, View} from 'react-native';
 import * as Google from 'expo-google-app-auth';
 import {GoogleLogInConfig} from "expo-google-app-auth";
 import * as Updates from "expo-updates"
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function App() {
+    const [user, setUser] = useState<any | null>(null)
+    const [accessToken, setAccessToken] = useState<string | null>(null)
+    const [e, setE] = useState<string | null>(null)
 
     useEffect(() => {
         async function updateApp() {
@@ -14,16 +18,28 @@ export default function App() {
                 await Updates.reloadAsync(); // depende da sua estratégia
             }
         }
-        updateApp();
+
+        async function getData() {
+            try {
+                const accessToken = await AsyncStorage.getItem('@accessToken')
+                const user = await AsyncStorage.getItem('@user')
+                if(accessToken !== null) {
+                    setAccessToken(accessToken)
+                }
+                if(user !== null) {
+                    setUser(JSON.parse(user))
+                }
+            } catch(e) {
+                // error reading value
+            }
+        }
+
+        getData()
+        updateApp()
     }, [])
 
-    const [user, setUser] = useState(null)
-    const [accessToken, setAccessToken] = useState(null)
-    const [e, setE] = useState(null)
-
     const config: GoogleLogInConfig = {
-        androidClientId: "", // expo
-        androidStandaloneAppClientId: "", // production
+     // config
     }
 
     async function handleSignIn() {
@@ -33,6 +49,8 @@ export default function App() {
             if (type === 'success') {
                 setUser(user)
                 setAccessToken(accessToken)
+                await AsyncStorage.setItem('@accessToken', accessToken)
+                await AsyncStorage.setItem('@user', JSON.stringify(user))
                 return accessToken
             } else {
                 return {cancelled: true}
@@ -47,7 +65,8 @@ export default function App() {
         try {
             await Google.logOutAsync({ accessToken, ...config })
             setAccessToken(null)
-            console.log('deslogado')
+            await AsyncStorage.removeItem('@accessToken')
+            await AsyncStorage.removeItem('@user')
         }catch (e) {
             console.log(e)
             return { error: true }
@@ -73,7 +92,7 @@ export default function App() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#aaa',
+        backgroundColor: '#f00',
         alignItems: 'center',
         justifyContent: 'center',
     },
