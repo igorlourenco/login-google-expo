@@ -4,30 +4,19 @@ import * as Google from 'expo-google-app-auth';
 import {GoogleLogInConfig} from "expo-google-app-auth";
 import * as Updates from "expo-updates"
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useNavigation, useFocusEffect} from "@react-navigation/native"
 
 export default function Login() {
-    const [user, setUser] = useState<any | null>(null)
-    const [accessToken, setAccessToken] = useState<string | null>(null)
-    const [e, setE] = useState<string | null>(null)
+    const navigation = useNavigation();
 
-    useEffect(() => {
-        async function updateApp() {
-            const { isAvailable } = await Updates.checkForUpdateAsync();
-            if (isAvailable) {
-                await Updates.fetchUpdateAsync();
-                await Updates.reloadAsync(); // depende da sua estratégia
-            }
-        }
-
-        async function getData() {
+    useFocusEffect( () => {
+        async function getData(){
             try {
-                const accessToken = await AsyncStorage.getItem('@accessToken')
-                const user = await AsyncStorage.getItem('@user')
-                if(accessToken !== null) {
-                    setAccessToken(accessToken)
-                }
-                if(user !== null) {
-                    setUser(JSON.parse(user))
+                const storedAccessToken = await AsyncStorage.getItem('@accessToken')
+                const storedUser = await AsyncStorage.getItem('@user')
+                if(storedAccessToken !== null && storedUser !== null) {
+
+                    navigation.navigate('Home');
                 }
             } catch(e) {
                 // error reading value
@@ -35,11 +24,13 @@ export default function Login() {
         }
 
         getData()
-        updateApp()
-    }, [])
+    })
 
     const config: GoogleLogInConfig = {
-        // config
+        androidClientId: "441242396389-k3omnhfhllm0r5tkttu5779dicjjil7p.apps.googleusercontent.com", // expo
+        androidStandaloneAppClientId: "441242396389-j1mq4np4ampuv2eb1ph1u16ofejf9una.apps.googleusercontent.com", // production
+        // redirectUrl: "com.notoriousigor.lettura:/oauth2redirect/google",
+        scopes: ["profile", "email"]
     }
 
     async function handleSignIn() {
@@ -48,45 +39,20 @@ export default function Login() {
             const {type, user, accessToken} = await Google.logInAsync(config);
 
             if (type === 'success') {
-                setUser(user)
-                setAccessToken(accessToken)
                 await AsyncStorage.setItem('@accessToken', accessToken)
                 await AsyncStorage.setItem('@user', JSON.stringify(user))
+                navigation.navigate('Home')
                 return accessToken
             } else {
                 return {cancelled: true}
             }
         }catch (e) {
-            setE(e.toString())
             return { error: true }
         }
     }
 
-    async function handleSignOut() {
-        try {
-            // @ts-ignore
-            await Google.logOutAsync({ accessToken, ...config })
-            setAccessToken(null)
-            await AsyncStorage.removeItem('@accessToken')
-            await AsyncStorage.removeItem('@user')
-        }catch (e) {
-            console.log(e)
-            return { error: true }
-        }
-    }
-
-
-    if (user && accessToken)
         return (
             <View style={styles.container}>
-                <Text>{user.name}</Text>
-                <Button onPress={handleSignOut} title="LOG OUT"/>
-            </View>
-        )
-    else
-        return (
-            <View style={styles.container}>
-                <Text>{e}</Text>
                 <Button onPress={handleSignIn} title="LOG IN"/>
             </View>
         )
