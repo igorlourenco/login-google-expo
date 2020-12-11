@@ -10,6 +10,7 @@ export default function Home() {
     const navigation = useNavigation();
 
     const [user, setUser] = useState<any | null>()
+    const [books, setBooks] = useState<any | null>([])
     const [accessToken, setAccessToken] = useState<string | null>()
 
     const config: GoogleLogInConfig = {
@@ -20,6 +21,12 @@ export default function Home() {
     }
 
     useEffect(() => {
+        async function getBooks(ownerId: string){
+           const response = await api.get(`books/${ownerId}`)
+            setBooks(response.data)
+        }
+
+
         async function getData() {
             try {
                 const storedAccessToken = await AsyncStorage.getItem('@accessToken')
@@ -51,6 +58,9 @@ export default function Home() {
             }
         }
 
+        getBooks("109483696654877845298")
+        console.log(books)
+
         getData()
     }, [accessToken])
 
@@ -73,6 +83,12 @@ export default function Home() {
         (user && accessToken) ?
             <View style={styles.container}>
                 <Text style={styles.text}>{user.name}</Text>
+                {
+                    books && books.map((book: any) => (
+                        <Text style={styles.text}>{book.title}</Text>
+                    ))
+                }
+
                 <Button onPress={handleSignOut} title="LOG OUT"/>
             </View>
             :
